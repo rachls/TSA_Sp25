@@ -1,0 +1,61 @@
+---
+title: "Importing Data Sets"
+author: "Luana Lima"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Setting R code chunk options
+
+First R code chunk is used for setting the options for all R code chunks. The choice `echo = TRUE` means both code and output will appear on report, `include = FALSE` neither code nor output is printed.
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=60), tidy=TRUE) 
+#the tidy arguments prevent the code from running off the page i.e. wrap by itself
+
+```
+
+## Loading packages and initializing
+
+Second R code chunk is for loading packages. By setting `message = FALSE`, the code will appear but not the output. 
+
+```{r package, message=FALSE}
+library(readxl)
+library(openxlsx)
+
+```
+
+
+## Importing data with read_excel()
+
+```{r}
+#Importing data set without change the original file using read.xlsx
+energy_data1 <- read_excel(path="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip = 12, sheet="Monthly Data",col_names=FALSE) 
+
+#Now let's extract the column names from row 11
+read_col_names <- read_excel(path="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",skip = 10,n_max = 1, sheet="Monthly Data",col_names=FALSE) 
+
+#Assign the column names to the data set
+colnames(energy_data1) <- read_col_names
+
+#Visualize the first rows of the data set
+head(energy_data1)
+
+```
+
+## Importing data with read.xlsx()
+
+```{r}
+energy_data2 <- read.xlsx(xlsxFile="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",sheet = "Monthly Data", startRow = 13, colNames = FALSE)
+
+read_col_names2  <- read.xlsx(xlsxFile="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",sheet = "Monthly Data", rows = 11, colNames = FALSE)
+
+#Assign the column names to the data set
+colnames(energy_data2) <- read_col_names2
+
+#Visualize the first rows of the data set
+head(energy_data2)
+
+```
+

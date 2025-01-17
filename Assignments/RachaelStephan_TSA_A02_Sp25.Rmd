@@ -1,9 +1,11 @@
 ---
 title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2025"
 subtitle: "Assignment 2 - Due date 01/23/25"
-author: "Student Name"
+author: "Rachael Stephan"
 output: pdf_document
 geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Submission Instructions
@@ -22,7 +24,8 @@ R packages needed for this assignment:"forecast","tseries", and "dplyr". Install
 
 ```{r}
 #Load/install required package here
-
+library(forecast); library(tseries); library(dplyr)
+library(readxl); library(openxlsx)
 ```
 
 
@@ -32,7 +35,17 @@ Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Produ
 
 ```{r}
 #Importing data set
+renewable_e_prod_consump <- read.xlsx(xlsxFile="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+                                      sheet = "Monthly Data", 
+                                      startRow = 13, 
+                                      colNames = FALSE)
 
+#get column names
+
+
+#check data set
+head(renewable_e_prod_consump)
+str(renewable_e_prod_consump)
 ```
 
 

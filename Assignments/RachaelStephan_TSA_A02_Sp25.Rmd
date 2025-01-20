@@ -22,7 +22,7 @@ When you have completed the assignment, **Knit** the text and code into a single
 
 R packages needed for this assignment:"forecast","tseries", and "dplyr". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.\\
 
-```{r}
+```{r library}
 #Load/install required package here
 library(forecast); library(tseries); library(dplyr)
 library(readxl); library(openxlsx)
@@ -33,15 +33,22 @@ library(readxl); library(openxlsx)
 
 Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx" on our **Data** folder. The data comes from the US Energy Information and Administration and corresponds to the December 2023 Monthly Energy Review. The spreadsheet is ready to be used. You will also find a $.csv$ version of the data "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv". You may use the function $read.table()$ to import the $.csv$ data in R. Or refer to the file "M2_ImportingData_CSV_XLSX.Rmd" in our Lessons folder for functions that are better suited for importing the $.xlsx$.
 
-```{r}
+```{r import}
 #Importing data set
-renewable_e_prod_consump <- read.xlsx(xlsxFile="./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+renewable_e_prod_consump <- read.xlsx("./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
                                       sheet = "Monthly Data", 
                                       startRow = 13, 
                                       colNames = FALSE)
 
 #get column names
+col_units <- 
+  read.xlsx("./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+            rows = 11:12,
+            sheet="Monthly Data",
+            colNames=FALSE)
 
+#set col names
+colnames(renewable_e_prod_consump) <- col_units[1,]
 
 #check data set
 head(renewable_e_prod_consump)
@@ -52,7 +59,7 @@ str(renewable_e_prod_consump)
 ## Question 1
 You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.
 
-```{r}
+```{r select}
 
 ```
 

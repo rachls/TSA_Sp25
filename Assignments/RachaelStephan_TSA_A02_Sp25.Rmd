@@ -57,23 +57,32 @@ str(renewable_e_prod_consump)
 
 
 ## Question 1
-You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.
+*You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.*
 
 ```{r select}
+#select for columns of interest
+energy_dataset <- renewable_e_prod_consump %>%
+  select(`Total Biomass Energy Production`, 
+         `Total Renewable Energy Production`, 
+         `Hydroelectric Power Consumption`)
+
+#get first few rows of each column
+head(energy_dataset)
 
 ```
 
 
 ## Question 2
-Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().
+*Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().*
 
 ```{r}
-
+#create a time series object
+energy_dataset_ts <- ts(energy_dataset)
 ```
 
 
 ## Question 3
-Compute mean and standard deviation for these three series.
+*Compute mean and standard deviation for these three series.*
 
 ```{r}
 
@@ -81,15 +90,15 @@ Compute mean and standard deviation for these three series.
 
 
 ## Question 4
-Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.
+*Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.*
 
 ```{r}
 
 ```
-
+increase, decrease, stable? Trends? How do they compare to each other?
 
 ## Question 5
-Compute the correlation between these three series. Are they significantly correlated? Explain your answer.
+*Compute the correlation between these three series. Are they significantly correlated? Explain your answer.*
 
 ```{r}
 
@@ -112,3 +121,4 @@ Compute the partial autocorrelation function from lag 1 to lag 40 for these thre
 ```
 
 
+decaying? up or down? seasonality? does the acf have similar shapes and formats? same for pacf.

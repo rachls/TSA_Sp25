@@ -25,9 +25,26 @@ R packages needed for this assignment:"forecast","tseries", and "dplyr". Install
 ```{r library}
 #Load/install required package here
 library(forecast); library(tseries); library(dplyr)
-library(readxl); library(openxlsx)
+library(readxl); library(openxlsx); library(lubridate)
 ```
 
+##Figure Theme
+
+Create and set a cohesive theme for any figures.
+
+```{r theme}
+#set theme
+mytheme <- theme_bw(base_size = 10)+
+  theme(axis.title = element_text(size = 10, hjust = 0.5),
+        plot.title.position = "panel",
+        panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.25),
+        plot.caption = element_text(hjust = 0),
+        legend.box = "vertical",
+        legend.location = "plot",
+        axis.gridlines = element_line(color = "grey", linewidth = 0.25),
+        axis.ticks = element_line(color = "black", linewidth = 0.5))
+theme_set(mytheme)
+```
 
 ## Data set information  
 
@@ -49,6 +66,9 @@ col_units <-
 
 #set col names
 colnames(renewable_e_prod_consump) <- col_units[1,]
+
+#fix dates
+renewable_e_prod_consump$Month <- as_date(renewable_e_prod_consump$Month, origin = "1900-01-01")
 
 #check data set
 head(renewable_e_prod_consump)
@@ -76,8 +96,10 @@ head(energy_dataset)
 *Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().*
 
 ```{r}
-#create a time series object
-energy_dataset_ts <- ts(energy_dataset)
+#create a time series object specifying the start and frequency of ts object
+energy_dataset_ts <- ts(energy_dataset,
+                        start=c(1973,1),
+                        frequency=12)
 ```
 
 
@@ -85,7 +107,11 @@ energy_dataset_ts <- ts(energy_dataset)
 *Compute mean and standard deviation for these three series.*
 
 ```{r}
+#calculate the mean for each ts
+energy_dataset_mean <- sapply(energy_dataset_ts, mean)
 
+#calculate the std. dev for each ts
+energy_dataset_std <- sapply(energy_dataset_ts, sd)
 ```
 
 
@@ -93,7 +119,29 @@ energy_dataset_ts <- ts(energy_dataset)
 *Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.*
 
 ```{r}
+#plot biomass ts
+autoplot(energy_dataset_ts[,1], col = "red")+
+  geom_abline(slope = 0, intercept = energy_dataset_mean[1])+
+  labs(y = paste(col_units[1,4],col_units[2,4], sep = " "),
+       title = "The United States Biomass Energy Production from 1973 to 2024")
 
+#plot renewable ts
+autoplot(energy_dataset_ts[,2], col ="darkgreen")+
+  geom_abline(slope = 0, intercept = energy_dataset_mean[2])+
+  labs(y = paste(col_units[1,5],col_units[2,5], sep = " "),
+       title = "The United States Renewable Energy Production from 1973 to 2024")
+
+#plot renewable ts
+autoplot(energy_dataset_ts[,3], col ="blue")+
+  geom_abline(slope = 0, intercept = energy_dataset_mean[3])+
+  labs(y = paste(col_units[1,6],col_units[2,6], sep = " "),
+       title = "The United States Hydroelectric Power Consumption from 1973 to 2024")
+
+#plot all ts
+autoplot(energy_dataset_ts)+
+  labs(y = paste("Amount of Energy",col_units[2,6], sep = " "),
+       title = "The United States Hydroelectric, Biomass, and Renewable Power Usage from 1973 to 2024",
+       colour = "Energy Type")
 ```
 increase, decrease, stable? Trends? How do they compare to each other?
 
@@ -106,7 +154,7 @@ increase, decrease, stable? Trends? How do they compare to each other?
 
 
 ## Question 6
-Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?
+*Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?*
 
 ```{r}
 
@@ -114,7 +162,7 @@ Compute the autocorrelation function from lag 1 up to lag 40 for these three var
 
 
 ## Question 7
-Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?
+*Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?*
 
 ```{r}
 

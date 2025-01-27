@@ -22,10 +22,18 @@ When you have completed the assignment, **Knit** the text and code into a single
 
 R packages needed for this assignment:"forecast","tseries", and "dplyr". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.\\
 
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(comment = "")
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
 ```{r library}
 #Load/install required package here
-library(forecast); library(tseries); library(dplyr)
+library(forecast); library(tseries); library(tidyverse)
 library(readxl); library(openxlsx); library(lubridate)
+library(knitr)
 ```
 
 ##Figure Theme
@@ -50,7 +58,7 @@ theme_set(mytheme)
 
 Consider the data provided in the spreadsheet "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx" on our **Data** folder. The data comes from the US Energy Information and Administration and corresponds to the December 2023 Monthly Energy Review. The spreadsheet is ready to be used. You will also find a $.csv$ version of the data "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv". You may use the function $read.table()$ to import the $.csv$ data in R. Or refer to the file "M2_ImportingData_CSV_XLSX.Rmd" in our Lessons folder for functions that are better suited for importing the $.xlsx$.
 
-```{r import}
+```{r import, results='hold', comment=""}
 #Importing data set
 renewable_e_prod_consump <- read.xlsx("./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
                                       sheet = "Monthly Data", 
@@ -69,9 +77,15 @@ colnames(renewable_e_prod_consump) <- col_units[1,]
 
 #fix dates
 renewable_e_prod_consump$Month <- as_date(renewable_e_prod_consump$Month, origin = "1900-01-01")
+renewable_e_prod_consump$Month <- paste(month(renewable_e_prod_consump$Month,
+                                              label = TRUE, 
+                                              abbr = TRUE), 
+                                        year(renewable_e_prod_consump$Month))
 
 #check data set
-head(renewable_e_prod_consump)
+kable(head(renewable_e_prod_consump[,c(1:7)]),
+      caption = "First few rows of the imported timeseries data")
+kable(head(renewable_e_prod_consump[,c(1,8:14)]))
 str(renewable_e_prod_consump)
 ```
 
@@ -87,7 +101,8 @@ energy_dataset <- renewable_e_prod_consump %>%
          `Hydroelectric Power Consumption`)
 
 #get first few rows of each column
-head(energy_dataset)
+kable(head(energy_dataset),
+      caption = "First few rows of the selected timeseries for analysis")
 
 ```
 
@@ -95,7 +110,7 @@ head(energy_dataset)
 ## Question 2
 *Transform your data frame in a time series object and specify the starting point and frequency of the time series using the function ts().*
 
-```{r}
+```{r transform_ts}
 #create a time series object specifying the start and frequency of ts object
 energy_dataset_ts <- ts(energy_dataset,
                         start=c(1973,1),
@@ -106,19 +121,24 @@ energy_dataset_ts <- ts(energy_dataset,
 ## Question 3
 *Compute mean and standard deviation for these three series.*
 
-```{r}
+```{r mean_std}
 #calculate the mean for each ts
 energy_dataset_mean <- sapply(energy_dataset_ts, mean)
 
 #calculate the std. dev for each ts
 energy_dataset_std <- sapply(energy_dataset_ts, sd)
+
+#display the mean and standard deviation
+kable(cbind("Mean (Trillion Btu)" = energy_dataset_mean, 
+            "Standard Deviation (Trillion Btu)" = energy_dataset_std),
+      caption = "The mean and standard deviation of each selected time series")
 ```
 
 
 ## Question 4
 *Display and interpret the time series plot for each of these variables. Try to make your plot as informative as possible by writing titles, labels, etc. For each plot add a horizontal line at the mean of each series in a different color.*
 
-```{r}
+```{r plot_ts, results='hold'}
 #plot biomass ts
 autoplot(energy_dataset_ts[,1], col = "red")+
   geom_abline(slope = 0, intercept = energy_dataset_mean[1])+
@@ -140,32 +160,72 @@ autoplot(energy_dataset_ts[,3], col ="blue")+
 #plot all ts
 autoplot(energy_dataset_ts)+
   labs(y = paste("Amount of Energy",col_units[2,6], sep = " "),
-       title = "The United States Hydroelectric, Biomass, and Renewable Power Usage from 1973 to 2024",
+       title = "The United States Hydroelectric, Biomass, and Renewable Power Usage from\n1973 to 2024",
        colour = "Energy Type")
 ```
-increase, decrease, stable? Trends? How do they compare to each other?
+
+Both the total biomass energy production and the total renewable energy production increases over time. These two time series show similar trends to each other in which they go through a period of increase, followed by a stable period, and then another upward trend. The biomass timeseries appears to have a steep reduction in energy production in 2020 but then continues with the positive trend afterwards. The renewable energy timeseries has a slight decrease in 2020 as well, but it is not as pronounced. 
+
+There appears to be periods in the biomass timeseries where the magnitude of the seasonality changes, with greater magnitudes occurring between approximately 1990 to 2000 and from 2015 onwards. These time periods are also the periods where the trend of biomass production is more stable. Conversely, the magnitude of the seasonality in the renewable energy production timeseries appears to remain stable across the timeseries.
+
+The hydroelectric power consumption appears to remain stable over time. The peaks and valleys (i.e., seasonality) of the time series also appear to be relatively similar in magnitude over time. 
 
 ## Question 5
 *Compute the correlation between these three series. Are they significantly correlated? Explain your answer.*
 
-```{r}
+```{r correlation}
+energy_dataset_corr <- cor(energy_dataset_ts)
 
+kable(energy_dataset_corr,
+      caption = "The correlation coefficients for the biomass, renewable, and hydroelectric energy use timeseries in the United States from 1973 to 2024")
 ```
 
 
 ## Question 6
 *Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?*
 
-```{r}
+```{r acf_plots}
+energy_dataset_acf_biomass <- Acf(energy_dataset_ts[,1],
+                                  lag.max=40, 
+                                  type="correlation", 
+                                  plot=TRUE,
+                                  main = "The Autocorrelation of the Biomass Energy 
+Consumption Timeseries in the USA from 1973 to 2024")
 
+energy_dataset_acf_renewable <- Acf(energy_dataset_ts[,2],
+                                  lag.max=40, 
+                                  type="correlation", 
+                                  plot=TRUE,
+                                  main = "The autocorrelation of the renewable energy 
+consumption timeseries in the USA from 1973 to 2024")
+
+energy_dataset_acf_hydroelectric <- Acf(energy_dataset_ts[,3],
+                                  lag.max=40, 
+                                  type="correlation", 
+                                  plot=TRUE,
+                                  main = "The autocorrelation of the hydroelectric 
+energy production timeseries in the USA from 1973 to 2024")
 ```
 
 
 ## Question 7
 *Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?*
 
-```{r}
+```{r pacf_plots}
+energy_dataset_pacf_biomass <- Pacf(energy_dataset_ts[,1],
+                                  lag.max=40, 
+                                  plot=TRUE,
+                                  main = "The partial autocorrelation of the biomass energy\nconsumption timeseries in the USA from 1973 to 2024")
 
+energy_dataset_pacf_renewable <- Pacf(energy_dataset_ts[,2],
+                                  lag.max=40, 
+                                  plot=TRUE,
+                                  main = "The partial autocorrelation of the renewable energy\nconsumption timeseries in the USA from 1973 to 2024")
+
+energy_dataset_pacf_hydroelectric <- Pacf(energy_dataset_ts[,3],
+                                  lag.max=40, 
+                                  plot=TRUE,
+                                  main = "The partial autocorrelation of the hydroelectric energy\nproduction timeseries in the USA from 1973 to 2024")
 ```
 
 

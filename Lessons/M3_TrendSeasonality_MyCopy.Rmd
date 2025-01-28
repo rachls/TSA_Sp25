@@ -156,9 +156,9 @@ for (i in 2:length(inflow_data)) {
   linear_trend[i-1] <- lm(inflow_data[,i]~t)
   
   #first coefficient is the intercept term or beta0
-  beta0[i-1] <- as.numeric(linear_trend[i-1]$coefficients[1])
+  beta0[i-1] <- as.numeric(linear_trend[[i-1]][1])
   #second coefficient is the slope or beta1
-  beta1[i-1] <- as.numeric(linear_trend[i-1]$coefficients[2])
+  beta1[i-1] <- as.numeric(linear_trend[[i-1]][2])
   
   #detrend
   linear_trend_eq[,i-1] <- beta0[i-1] + beta1[i-1]*t

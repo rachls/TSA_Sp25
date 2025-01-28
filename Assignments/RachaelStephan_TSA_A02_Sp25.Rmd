@@ -89,7 +89,7 @@ kable(head(renewable_e_prod_consump[,c(1,8:14)]))
 str(renewable_e_prod_consump)
 ```
 
-
+\newpage
 ## Question 1
 *You will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. Use the command head() to verify your data.*
 
@@ -184,7 +184,7 @@ The total biomass energy production and the total renewable energy production ar
 ## Question 6
 *Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?*
 
-```{r acf_plots}
+```{r acf_plots, results='hold'}
 energy_dataset_acf_biomass <- Acf(energy_dataset_ts[,1],
                                   lag.max=40, 
                                   type="correlation", 
@@ -211,7 +211,7 @@ The renewable and biomass energy consumption autocorrelation plots show similar 
 ## Question 7
 *Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?*
 
-```{r pacf_plots}
+```{r pacf_plots, results='hold'}
 energy_dataset_pacf_biomass <- Pacf(energy_dataset_ts[,1],
                                   lag.max=40, 
                                   plot=TRUE,

@@ -228,5 +228,4 @@ energy_dataset_pacf_hydroelectric <- Pacf(energy_dataset_ts[,3],
                                   main = "The partial autocorrelation of the hydroelectric energy\nproduction timeseries in the USA from 1973 to 2024")
 ```
 
-
-decaying? up or down? seasonality? does the acf have similar shapes and formats? same for pacf.
+All of the partial autocorrelation plots show similar trends. There is a general decay in amplitude of all of the PACF plots. Only the highest amplitudes surpass the blue dotted line that indicates significance. The amount of times that exceed the blue line decreases with increasing lags. There is a smaller oscillating motion between positive and negative PACF that may coincide with seasonality in the data. The renewable energy and biomass energy PACF plots have similar magnitudes, and the hydroelectric energy PACF magnitudes were slightly less in comparison.

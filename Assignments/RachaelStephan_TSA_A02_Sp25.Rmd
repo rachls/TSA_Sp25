@@ -164,7 +164,7 @@ autoplot(energy_dataset_ts)+
        colour = "Energy Type")
 ```
 
-Both the total biomass energy production and the total renewable energy production increases over time. These two time series show similar trends to each other in which they go through a period of increase, followed by a stable period, and then another upward trend. The biomass timeseries appears to have a steep reduction in energy production in 2020 but then continues with the positive trend afterwards. The renewable energy timeseries has a slight decrease in 2020 as well, but it is not as pronounced. 
+Both the total biomass energy production and the total renewable energy production increases over time. These two time series show similar trends to each other in which they go through a period of linear increase, followed by a stable period, and then another upward linear trend. The biomass timeseries appears to have a steep reduction in energy production in 2020 but then continues with the positive trend afterwards. The renewable energy timeseries has a slight decrease in 2020 as well, but it is not as pronounced. Th 
 
 There appears to be periods in the biomass timeseries where the magnitude of the seasonality changes, with greater magnitudes occurring between approximately 1990 to 2000 and from 2015 onwards. These time periods are also the periods where the trend of biomass production is more stable. Conversely, the magnitude of the seasonality in the renewable energy production timeseries appears to remain stable across the timeseries.
 
@@ -179,7 +179,7 @@ energy_dataset_corr <- cor(energy_dataset_ts)
 kable(energy_dataset_corr,
       caption = "The correlation coefficients for the biomass, renewable, and hydroelectric energy use timeseries in the United States from 1973 to 2024")
 ```
-
+The total biomass energy production and the total renewable energy production are closely correlated, as indicated by a high absolute value for the correlation coefficient. None of the other timeseries are closely correlated with each other, as shown by low absolute values for their correlation coefficients. This results aligns with the observations made previously. 
 
 ## Question 6
 *Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?*
@@ -206,7 +206,7 @@ energy_dataset_acf_hydroelectric <- Acf(energy_dataset_ts[,3],
                                   main = "The autocorrelation of the hydroelectric 
 energy production timeseries in the USA from 1973 to 2024")
 ```
-
+The renewable and biomass energy consumption autocorrelation plots show similar behaviour. Both time series start out with a highly positive autocorrelation and decreases at a relatively consistent rate with each lag. Both of these timeseries still maintain a high magnitude of correlation at 40 lags. The autocorrelation plot for the hydroelectric energy production shows different behaviour. This plot oscillates between higher and lower magnitude correlations, alternating between positive and negative correlations. This could indicate the presence of seasonality. As the lags progress, the maximum magnitudes of the positive autocorrelation decreases but the maximum magnitude of the negative autocorrelations increases.  
 
 ## Question 7
 *Compute the partial autocorrelation function from lag 1 to lag 40 for these three variables. How these plots differ from the ones in Q6?*

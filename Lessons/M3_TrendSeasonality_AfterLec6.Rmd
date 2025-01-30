@@ -2,6 +2,8 @@
 title: "M3: Class Exercise on Trend and Season"
 author: "Luana Lima"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Setting R code chunk options
@@ -32,7 +34,7 @@ Let's continue working with our inflow data for reservoirs in Brazil.
 ```{r}
 
 #Importing time series data from text file#
-raw_inflow_data <- read.table(file="../Data/inflowtimeseries.txt",header=FALSE,skip=0)
+raw_inflow_data <- read.table(file="./Data/inflowtimeseries.txt",header=FALSE,skip=0)
 
 #Trim the table to include only columns you need
 nhydro <- ncol(raw_inflow_data)-2
@@ -174,6 +176,19 @@ dummies <- seasonaldummy(ts_detrend)
 seas_means_model <- lm(detrend_inflow ~ dummies)
 summary(seas_means_model)
 
+beta_intercept <- seas_means_model$coefficients[1]
+beta_coeff <- seas_means_model$coefficients[2:12]
+
+inflow_seas_comp <- array(0,nobs)
+for (i in 1:nobs) {
+  inflow_seas_comp[i] <- beta_intercept + beta_coeff %*% dummies[i,]
+}
+
+deseason_inflow_data <- detrend_inflow - inflow_seas_comp
+
+ts_deseason_inflow_data <- ts(deseason_inflow_data, start = c(1931,1), frequency = 12)
+
+autoplot(ts_inflow_data[,iHP] )
 
 ```
 

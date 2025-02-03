@@ -1,0 +1,249 @@
+---
+title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2025"
+subtitle: "Assignment 3 - Due date 02/04/25"
+author: "Rachael Stephan"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+  
+## Directions
+  
+You should open the .rmd file corresponding to this assignment on RStudio. The file is available on our class repository on Github. 
+
+Once you have the file open on your local machine the first thing you will do is rename the file such that it includes your first and last name (e.g., "LuanaLima_TSA_A03_Sp25.Rmd"). Then change "Student Name" on line 4 with your name. 
+
+Then you will start working through the assignment by  **creating code and output** that answer each question. Be sure to use this assignment document. Your report should contain the answer to each question and any plots/tables you obtained (when applicable).
+
+Please keep this R code chunk options for the report. It is easier for us to grade when we can see code and output together. And the tidy.opts will make sure that line breaks on your code chunks are automatically added for better visualization. 
+
+```{r setup, include=FALSE} 
+#set up chunk options
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), tidy=FALSE) 
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+
+#set theme
+mytheme <- theme_bw(base_size = 10)+
+  theme(axis.title = element_text(size = 10, hjust = 0.5),
+        plot.title.position = "panel",
+        panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.25),
+        plot.caption = element_text(hjust = 0),
+        legend.box = "vertical",
+        legend.location = "plot",
+        axis.gridlines = element_line(color = "grey", linewidth = 0.25),
+        axis.ticks = element_line(color = "black", linewidth = 0.5))
+theme_set(mytheme)
+```
+
+When you have completed the assignment, **Knit** the text and code into a single PDF file. Submit this pdf using Sakai. 
+
+## Questions 
+
+Consider the same data you used for A2 from the spreadsheet "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx". The data comes from the US Energy Information and Administration and corresponds to the December 2024 **Monthly** Energy Review. Once again you will work only with the following columns: Total Renewable Energy Production and Hydroelectric Power Consumption. Create a data frame structure with these two time series only. 
+
+R packages needed for this assignment:"forecast","tseries", and "Kendall". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.\\
+
+```{r upload}
+#Load/install required package here
+library(forecast); library(tseries); library(Kendall); library(cowplot)
+library(lubridate)
+
+#upload dataset
+renewable_e_prod_consump <- 
+  read.xlsx("./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+                                      sheet = "Monthly Data", 
+                                      startRow = 13, 
+                                      colNames = FALSE)
+
+#get column names
+col_units <- 
+  read.xlsx("./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx",
+            rows = 11:12,
+            sheet="Monthly Data",
+            colNames=FALSE)
+
+#set col names
+colnames(renewable_e_prod_consump) <- col_units[1,]
+
+#fix dates
+renewable_e_prod_consump$Month <- as_date(renewable_e_prod_consump$Month, origin = "1900-01-01")
+renewable_e_prod_consump$Month <- paste(month(renewable_e_prod_consump$Month,
+                                              label = TRUE, 
+                                              abbr = TRUE), 
+                                        year(renewable_e_prod_consump$Month))
+
+#select for columns of interest
+energy_matrix <- renewable_e_prod_consump %>%
+  select(`Month`, 
+         `Total Renewable Energy Production`, 
+         `Hydroelectric Power Consumption`)
+
+#get first few rows of each column to check structure and values
+kable(head(energy_matrix),
+      caption = "First few rows of the selected timeseries for analysis")
+str(energy_matrix)
+
+#create time series object
+energy_ts <- ts(energy_matrix[,2:3],
+                start=c(1973,1),
+                frequency=12)
+```
+
+##Trend Component
+
+### Q1
+For each time series, i.e., Renewable Energy Production and Hydroelectric Consumption create three plots: one with time series, one with the ACF and with the PACF. You may use the some code form A2, but I want all the three plots side by side as in a grid.
+(Hint: use function `plot_grid()` from the `cowplot` package)
+
+```{r}
+#create plots for renewable ts
+#time series
+energy_ts_plot_renewable <- autoplot(energy_ts[,1], col ="darkgreen")+
+  labs(y = paste("Production",col_units[2,5], sep = " "),
+       title = "Renewable Energy Production",
+       x = "Year")
+
+#ACF
+energy_acf_renewable <- Acf(energy_ts[,1],
+                                  lag.max=40, 
+                                  type="correlation", 
+                                  plot=FALSE)
+
+energy_acf_plot_renewable <- autoplot(energy_acf_renewable)+
+  labs(title = "Renewable ACF")
+
+#PACF
+energy_pacf_renewable <- Pacf(energy_ts[,1],
+                                  lag.max=40, 
+                                  plot=FALSE)
+
+energy_pacf_plot_renewable <- autoplot(energy_pacf_renewable)+
+  labs(title = "Renewable PACF")
+
+#plot the renewable grid
+plot_grid(energy_ts_plot_renewable, 
+          energy_acf_plot_renewable, 
+          energy_pacf_plot_renewable,
+          align = "h",
+          nrow = 1)
+
+#plot renewable ts
+#time series
+energy_ts_plot_hydro <- autoplot(energy_ts[,2], col ="blue")+
+  labs(y = paste("Consumption",col_units[2,6], sep = " "),
+       title = "Hydroelectric Power Consumption")
+
+#ACF
+energy_acf_hydro <- Acf(energy_ts[,2],
+                        lag.max=40, 
+                        type="correlation", 
+                        plot=FALSE)
+
+energy_acf_plot_hydro <- autoplot(energy_acf_hydro)+
+  labs(title = "Hydroelectric ACF")
+
+#PACF
+energy_pacf_hydro <- Pacf(energy_ts[,2],
+                          lag.max=40, 
+                          plot=FALSE)
+
+energy_pacf_plot_hydro <- autoplot(energy_pacf_hydro)+
+  labs(title = "Hydroelectric PACF")
+
+#plot the hydro plot grid
+plot_grid(energy_ts_plot_hydro, 
+          energy_acf_plot_hydro, 
+          energy_pacf_plot_hydro,
+          align = "h",
+          nrow = 1)
+```
+
+### Q2
+From the plot in Q1, do the series Total Renewable Energy Production and Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
+**is this just a repeat from a2?**
+
+### Q3
+Use the *lm()* function to fit a linear trend to the two time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
+
+```{r lm_renewable}
+#create variable for number of temporal observations
+time <- 1:length(energy_ts[,1])
+
+#Fit the linear trend for renewable energy
+lm_renewable <- lm(energy_ts[,1] ~ time)
+summary(lm_renewable)
+
+#save renewable lm coefficients
+lm_renewable_beta0 <- as.numeric(lm_renewable$coefficients[1])
+lm_renewable_beta1 <- as.numeric(lm_renewable$coefficients[2])
+```
+
+***answer renewable here***
+
+```{r lm_hydro}
+#Fit the linear trend for hydro energy
+lm_hydro <- lm(energy_ts[,2] ~ time)
+summary(lm_hydro)
+
+#save renewable lm coefficients
+lm_hydro_beta0 <- as.numeric(lm_hydro$coefficients[1])
+lm_hydro_beta1 <- as.numeric(lm_hydro$coefficients[2])
+```
+
+***answer hydro here*** 
+ 
+### Q4
+Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
+
+```{r detrend_renewable}
+#create renewable linear trend equation
+lm_trend_renewable <- lm_renewable_beta0 + lm_renewable_beta1 * time
+
+#use linear trend to detrend renewable ts
+lm_detrend_renewable <- energy_ts[,1] - lm_trend_renewable
+
+
+#create timeseries trend
+ts_trend_renewable <- ts(lm_trend_renewable,
+                         start=c(1973,1),
+                         frequency=12)
+
+ts_detrend_renewable <- ts(lm_detrend_renewable,
+                           start = c(1973,1),
+                           frequency = 12)
+
+#plot ts and trends
+autoplot(energy_ts[,1],color="darkblue")+
+  autolayer(ts_detrend_renewable, series ="Detrended",color="green")+
+  autolayer(ts_trend_renewable, series ="Linear Component",color="red")
+```
+
+
+
+```{r detrend_hydro}
+
+```
+
+
+### Q5
+Plot ACF and PACF for the detrended series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?
+
+## Seasonal Component
+
+Set aside the detrended series and consider the original series again from Q1 to answer Q6 to Q8.
+
+### Q6
+Just by looking at the time series and the acf plots, do the series seem to have a seasonal trend? No need to run any code to answer your question. Just type in you answer below.
+
+### Q7
+Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) the two time series. Ask R to print the summary of the regression. Interpret the regression output. From the results which series have a seasonal trend? Do the results match you answer to Q6?
+
+### Q8
+Use the regression coefficients from Q7 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
+
+### Q9
+Plot ACF and PACF for the deseason series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?
+
+

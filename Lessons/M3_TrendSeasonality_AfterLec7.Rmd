@@ -2,6 +2,8 @@
 title: "M3: Class Exercise on Trend and Season"
 author: "Luana Lima"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Setting R code chunk options

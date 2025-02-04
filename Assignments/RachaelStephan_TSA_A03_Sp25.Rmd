@@ -23,18 +23,6 @@ Please keep this R code chunk options for the report. It is easier for us to gra
 knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), tidy=FALSE) 
 knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(message = FALSE)
-
-#set theme
-mytheme <- theme_bw(base_size = 10)+
-  theme(axis.title = element_text(size = 10, hjust = 0.5),
-        plot.title.position = "panel",
-        panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.25),
-        plot.caption = element_text(hjust = 0),
-        legend.box = "vertical",
-        legend.location = "plot",
-        axis.gridlines = element_line(color = "grey", linewidth = 0.25),
-        axis.ticks = element_line(color = "black", linewidth = 0.5))
-theme_set(mytheme)
 ```
 
 When you have completed the assignment, **Knit** the text and code into a single PDF file. Submit this pdf using Sakai. 
@@ -48,7 +36,19 @@ R packages needed for this assignment:"forecast","tseries", and "Kendall". Insta
 ```{r upload}
 #Load/install required package here
 library(forecast); library(tseries); library(Kendall); library(cowplot)
-library(lubridate)
+library(lubridate); library(tidyverse); library(openxlsx); library(knitr)
+
+#set theme
+mytheme <- theme_bw(base_size = 10)+
+  theme(axis.title = element_text(size = 10, hjust = 0.5),
+        plot.title.position = "panel",
+        panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.25),
+        plot.caption = element_text(hjust = 0),
+        legend.box = "vertical",
+        legend.location = "plot",
+        axis.gridlines = element_line(color = "grey", linewidth = 0.25),
+        axis.ticks = element_line(color = "black", linewidth = 0.5))
+theme_set(mytheme)
 
 #upload dataset
 renewable_e_prod_consump <- 
@@ -97,7 +97,7 @@ energy_ts <- ts(energy_matrix[,2:3],
 For each time series, i.e., Renewable Energy Production and Hydroelectric Consumption create three plots: one with time series, one with the ACF and with the PACF. You may use the some code form A2, but I want all the three plots side by side as in a grid.
 (Hint: use function `plot_grid()` from the `cowplot` package)
 
-```{r}
+```{r initial_plots}
 #create plots for renewable ts
 #time series
 energy_ts_plot_renewable <- autoplot(energy_ts[,1], col ="darkgreen")+
@@ -169,7 +169,7 @@ Use the *lm()* function to fit a linear trend to the two time series. Ask R to p
 
 ```{r lm_renewable}
 #create variable for number of temporal observations
-time <- 1:length(energy_ts[,1])
+time <- 1:nrow(energy_ts)
 
 #Fit the linear trend for renewable energy
 lm_renewable <- lm(energy_ts[,1] ~ time)
@@ -217,18 +217,102 @@ ts_detrend_renewable <- ts(lm_detrend_renewable,
 #plot ts and trends
 autoplot(energy_ts[,1],color="darkblue")+
   autolayer(ts_detrend_renewable, series ="Detrended",color="green")+
-  autolayer(ts_trend_renewable, series ="Linear Component",color="red")
+  autolayer(ts_trend_renewable, series ="Linear Component",color="red")+
+  labs(title = "Trended and Detrended Renewable Energy Production in the USA",
+       y = paste("Renewable Energy Production",col_units[2,6], sep = " "),
+       x= "Year")
 ```
 
 
 
 ```{r detrend_hydro}
+#create hydro linear trend equation
+lm_trend_hydro <- lm_hydro_beta0 + lm_hydro_beta1 * time
 
+#use linear trend to detrend hydro ts
+lm_detrend_hydro <- energy_ts[,2] - lm_trend_hydro
+
+
+#create timeseries trend
+ts_trend_hydro <- ts(lm_trend_hydro,
+                         start=c(1973,1),
+                         frequency=12)
+
+ts_detrend_hydro <- ts(lm_detrend_hydro,
+                           start = c(1973,1),
+                           frequency = 12)
+
+#plot ts and trends
+autoplot(energy_ts[,2],color="darkblue")+
+  autolayer(ts_detrend_hydro, series ="Detrended",color="green")+
+  autolayer(ts_trend_hydro, series ="Linear Component",color="red")+
+  labs(title = "Trended and Detrended Hydrodroelectric Energy Production in the USA",
+       y = paste("Hydroelectric Energy Production",col_units[2,6], sep = " "),
+       x= "Year")
 ```
 
 
 ### Q5
 Plot ACF and PACF for the detrended series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?
+```{r detrend_acf_pacf}
+#determine ACF, PACF for renewable energy
+#ACF
+acf_detrend_renewable <- Acf(ts_detrend_renewable,
+                  lag.max=40, 
+                  type="correlation", 
+                  plot=FALSE)
+
+acf_detrend_plot_renewable <- autoplot(acf_detrend_renewable)+
+  labs(title = "Detrended Renewable ACF")
+
+#PACF
+pacf_detrend_renewable <- Pacf(ts_detrend_renewable,
+                  lag.max=40, 
+                  plot=FALSE)
+
+pacf_detrend_plot_renewable <- autoplot(pacf_detrend_renewable)+
+  labs(title = "Detrended Renewable ACF")
+
+#determine ACF, PACF for hydro energy
+#ACF
+acf_detrend_hydro <- Acf(ts_detrend_hydro,
+                  lag.max=40, 
+                  type="correlation", 
+                  plot=FALSE)
+
+acf_detrend_plot_hydro <- autoplot(acf_detrend_hydro)+
+  labs(title = "Detrended Hydroelectric ACF")
+
+#PACF
+pacf_detrend_hydro <- Pacf(ts_detrend_hydro,
+                  lag.max=40, 
+                  plot=FALSE)
+
+pacf_detrend_plot_hydro <- autoplot(pacf_detrend_hydro)+
+  labs(title = "Detrended Hydroelectric ACF")
+
+#plot ACF comparisons in a plot
+plot_grid(energy_acf_plot_renewable, 
+          acf_detrend_plot_renewable,
+          energy_acf_plot_hydro,
+          acf_detrend_plot_hydro,
+          align = "h",
+          nrow = 2)
+```
+
+***talk about acf here***
+
+```{r pacf_plots}
+#Plot PACF comparisons in a grid
+plot_grid(energy_acf_plot_renewable, 
+          pacf_detrend_plot_renewable,
+          energy_acf_plot_hydro,
+          acf_detrend_plot_hydro,
+          align = "h",
+          nrow = 2)
+```
+
+***talk about pacf here***
 
 ## Seasonal Component
 
@@ -240,10 +324,135 @@ Just by looking at the time series and the acf plots, do the series seem to have
 ### Q7
 Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) the two time series. Ask R to print the summary of the regression. Interpret the regression output. From the results which series have a seasonal trend? Do the results match you answer to Q6?
 
+```{r seasonal_lm}
+#Use seasonal means model on the trended renewable dataset
+ts_dummies_renewable <- seasonaldummy(energy_ts[,1])
+
+lm_seasonal_renewable <- lm(energy_ts[,1] ~ ts_dummies_renewable)
+summary(lm_seasonal_renewable)
+
+lm_seasonal_beta_int_renewable <-lm_seasonal_renewable$coefficients[1]
+lm_seasonal_beta_coeff_renewable <-lm_seasonal_renewable$coefficients[2:12]
+
+#Use seasonal means model on the trended hydro dataset
+ts_dummies_hydro <- seasonaldummy(energy_ts[,2])
+
+lm_seasonal_hydro <- lm(energy_ts[,2] ~ ts_dummies_hydro)
+summary(lm_seasonal_hydro)
+
+lm_seasonal_beta_int_hydro <-lm_seasonal_hydro$coefficients[1]
+lm_seasonal_beta_coeff_hydro <-lm_seasonal_hydro$coefficients[2:12]
+```
+
+
 ### Q8
 Use the regression coefficients from Q7 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
 
+```{r deseason_renewable}
+seasonal_comp_renewable <- array(0, nrow(energy_ts))
+
+
+for(i in time){
+  seasonal_comp_renewable[i] <- lm_seasonal_beta_int_renewable + 
+    lm_seasonal_beta_coeff_renewable %*% ts_dummies_renewable[i,]
+}
+
+lm_deseasoned_renewable <- energy_ts[,1] - seasonal_comp_renewable
+
+ts_deseason_renewable <- ts(lm_deseasoned_renewable,
+                              start=c(1973,1),
+                              frequency = 12)
+
+#plot ts and deseasoned data
+autoplot(energy_ts[,1],color="darkblue")+
+  autolayer(ts_deseason_renewable, series ="Deseasoned",color="green")+
+  labs(title = "Seasoned and Deseasoned Renewable Energy Production in the USA",
+       y = paste("Renewable Energy Production",col_units[2,6], sep = " "),
+       x= "Year")
+```
+
+```{r deseason_hydro}
+seasonal_comp_hydro <- array(0, nrow(energy_ts))
+
+
+for(i in time){
+  seasonal_comp_hydro[i] <- lm_seasonal_beta_int_hydro + 
+    lm_seasonal_beta_coeff_hydro %*% ts_dummies_hydro[i,]
+}
+
+lm_deseasoned_hydro <- energy_ts[,2] - seasonal_comp_hydro
+
+ts_deseason_hydro <- ts(lm_deseasoned_hydro,
+                              start=c(1973,1),
+                              frequency = 12)
+
+#plot ts and deseasoned data
+autoplot(energy_ts[,2],color="darkblue")+
+  autolayer(ts_deseason_hydro, series ="Deseasoned",color="green")+
+  labs(title = "Seasoned and Deseasoned Hydro Energy Production in the USA",
+       y = paste("Hydro Energy Production",col_units[2,6], sep = " "),
+       x= "Year")
+```
+
 ### Q9
 Plot ACF and PACF for the deseason series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?
+```{r deseason_acf_pacf}
+#determine ACF, PACF for renewable energy
+#ACF
+acf_deseason_renewable <- Acf(ts_deseason_renewable,
+                  lag.max=40, 
+                  type="correlation", 
+                  plot=FALSE)
 
+acf_deseason_plot_renewable <- autoplot(acf_deseason_renewable)+
+  labs(title = "Deseasoned Renewable ACF")
+
+#PACF
+pacf_deseason_renewable <- Pacf(ts_deseason_renewable,
+                  lag.max=40, 
+                  plot=FALSE)
+
+pacf_deseason_plot_renewable <- autoplot(pacf_deseason_renewable)+
+  labs(title = "Deseasoned Renewable ACF")
+
+#determine ACF, PACF for hydro energy
+#ACF
+acf_deseason_hydro <- Acf(ts_deseason_hydro,
+                  lag.max=40, 
+                  type="correlation", 
+                  plot=FALSE)
+
+acf_deseason_plot_hydro <- autoplot(acf_deseason_hydro)+
+  labs(title = "Deseasoned Hydroelectric ACF")
+
+#PACF
+pacf_deseason_hydro <- Pacf(ts_deseason_hydro,
+                  lag.max=40, 
+                  plot=FALSE)
+
+pacf_deseason_plot_hydro <- autoplot(pacf_deseason_hydro)+
+  labs(title = "Deseasoned Hydroelectric ACF")
+
+#plot ACF comparisons in a plot
+plot_grid(energy_acf_plot_renewable, 
+          acf_deseason_plot_renewable,
+          energy_acf_plot_hydro,
+          acf_deseason_plot_hydro,
+          align = "h",
+          nrow = 2)
+```
+
+***talk about acf here***
+
+```{r deseason_pacf_plots}
+#Plot PACF comparisons in a grid
+plot_grid(energy_pacf_plot_renewable, 
+          pacf_deseason_plot_renewable,
+          energy_pacf_plot_hydro,
+          pacf_deseason_plot_hydro,
+          align = "h",
+          nrow = 2)
+```
+
+***talk about pacf here***
 

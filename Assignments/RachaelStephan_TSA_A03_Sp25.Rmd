@@ -161,8 +161,11 @@ plot_grid(energy_ts_plot_hydro,
 ```
 
 ### Q2
-From the plot in Q1, do the series Total Renewable Energy Production and Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
-**is this just a repeat from a2?**
+*From the plot in Q1, do the series Total Renewable Energy Production and Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?*
+
+The renewable energy consumption autocorrelation plots begins with a high magnitude and positive autocorrelation that decreases at a consistent rate with each lag. Both of these timeseries still maintain a high magnitude of correlation at 40 lags. The autocorrelation plot for the hydroelectric energy production shows different behaviour. This plot oscillates between higher and lower magnitude correlations, alternating between positive and negative correlations. This could indicate the presence of seasonality. As the lags progress, the maximum magnitudes of the positive autocorrelation decreases but the maximum magnitude of the negative autocorrelations increases.
+
+All of the partial autocorrelation plots show similar trends. There is a general decay in amplitude of all of the PACF plots. Only the highest amplitudes surpass the blue dotted line that indicates significance. The amount of times that exceed the blue line decreases with increasing lags. There is a smaller oscillating motion between positive and negative PACF that may coincide with seasonality in the data. The renewable energy and biomass energy PACF plots have similar magnitudes, and the hydroelectric energy PACF magnitudes were slightly less in comparison.
 
 ### Q3
 Use the *lm()* function to fit a linear trend to the two time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
@@ -253,7 +256,8 @@ autoplot(energy_ts[,2],color="darkblue")+
 
 
 ### Q5
-Plot ACF and PACF for the detrended series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?
+*Plot ACF and PACF for the detrended series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?*
+
 ```{r detrend_acf_pacf}
 #determine ACF, PACF for renewable energy
 #ACF
@@ -395,7 +399,7 @@ autoplot(energy_ts[,2],color="darkblue")+
 ```
 
 ### Q9
-Plot ACF and PACF for the deseason series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?
+*Plot ACF and PACF for the deseason series and compare with the plots from Q1. You may use plot_grid() again to get them side by side, but not mandatory. Did the plots change? How?*
 ```{r deseason_acf_pacf}
 #determine ACF, PACF for renewable energy
 #ACF

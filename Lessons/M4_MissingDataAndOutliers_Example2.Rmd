@@ -1,0 +1,87 @@
+---
+title: "M4: Outliers and Missing Data - Wind Speed Data"
+author: "Luana Lima"
+output: pdf_document
+---
+
+
+## Setting R code chunk options
+
+First R code chunk is used for setting the options for all R code chunks. The choice echo=TRUE means both code and output will appear on report, include = FALSE neither code nor output is printed.
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), tidy=FALSE) 
+```
+
+## Loading packages and initializing
+
+Second R code chunk is for loading packages. By setting message = FALSE, the code will appear but not the output. 
+
+```{r package, message=FALSE}
+library(lubridate)
+library(ggplot2)
+library(forecast)
+library(Kendall)
+library(tseries)
+
+#New packages for M4
+#install.packages("outliers")
+library(outliers)
+#install.packages("tidyverse")
+library(tidyverse)
+
+```
+
+## Importing and preparing data
+
+Today we will work with wind speed data. 
+
+```{r}
+
+#Importing time series data from text file#
+wind_data <- read.csv(file="./Data/Wind_Speed_PortArthurTX_Processed.csv",header=TRUE,stringsAsFactors = TRUE)
+
+#creating data object
+wind_data$DATE <- ym(wind_data$DATE)
+
+```
+
+
+## Transforming data into time series object
+
+Many of the functions we will use require a time series object. You can transform your data in a time series using the function *ts()*. 
+
+```{r}
+ts_wind_data <- ts(wind_data$AWND.1,frequency=12) 
+
+autoplot(ts_wind_data) +
+  ylab("Average Wind Speed") 
+```
+
+
+## Using pre-built function to clean series
+
+tsclean() from package 'forecast' identify and replace outliers and missing values in a time series using linear interpolation. This should be used with some caution!!
+
+```{r}
+
+clean_wind_data <- tsclean(ts_wind_data)  #object should be a time series
+
+autoplot(clean_wind_data, series="Wind Clean") +
+  autolayer(ts_wind_data, series="Wind Raw") +
+  ylab("Average Wind Speed") 
+
+#Note we only replaced missing data, algorithm did not identify any outliers for this data set.
+  
+
+```
+
+If you want to handle missing data, but do not want to remove outliers, here are two other opion that will replace them using linear interpolation.
+
+`forecast::na.interp()`
+`zoo::na.approx()`
+
+
+
+
+

@@ -138,7 +138,7 @@ for(i in 1:nhydro){
 Let's identify and remove trend component. You start by fitting a linear model to $Y_t=\beta_0+\beta_1*t+\epsilon_t$. 
 
 ```{r}
-iHP <- 4
+iHP <- 6
 #Create vector t
 t <- c(1:nobs)
 

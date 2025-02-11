@@ -20,10 +20,20 @@ When you have completed the assignment, **Knit** the text and code into a single
 
 R packages needed for this assignment: "xlsx" or "readxl", "ggplot2", "forecast","tseries", and "Kendall". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.\\
 
+```{r chunks, include=FALSE}
+#set up chunk options
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), 
+                      tidy=FALSE) 
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
 ```{r libraries, message=FALSE, warning=FALSE}
 #Load/install required package here
-library(readxl); library(ggplot2); library(forecast)
-library(tseries); library(Kendall); library(cowplot)
+library(openxlsx); library(ggplot2); library(forecast); 
+library(tidyverse); library(tseries); library(Kendall); 
+library(cowplot); library(lubridate); library(knitr)
 ```
 
 ## Questions 
@@ -108,7 +118,7 @@ ts_renewable_diff <- diff(ts_renewable,
 
 #plot the differenced timeseries
 autoplot(ts_renewable_diff)+
-  labs(title = "First Difference of the Renewable Energy Production\nTimeseries",
+  labs(title = "First Difference of the Renewable Energy Production Timeseries",
        y = "Difference")
 ```
 
@@ -179,15 +189,15 @@ acf_renewable_diff <- Acf(ts_renewable_diff,
 
 #create an ACF plot for each of the series
 acf_plot_renewable <- autoplot(acf_renewable)+
-  labs(title = "Renewable Energy Production ACF")+
+  labs(title = "Renewable Energy\nProduction ACF")+
   ylim(c(-0.5,1))
 
 acf_plot_renewable_detrend <- autoplot(acf_renewable_detrend)+
-  labs(title = "Detrended Renewable Energy Production ACF")+
+  labs(title = "Detrended Renewable\nEnergy Production ACF")+
   ylim(c(-0.5,1))
 
 acf_plot_renewable_diff <- autoplot(acf_renewable_diff)+
-  labs(title = "Differenced Renewable Energy Production ACF")+
+  labs(title = "Differenced Renewable\nEnergy Production ACF")+
   ylim(c(-0.5,1))
 
 #plot ACF comparisons in a plot
@@ -198,7 +208,7 @@ plot_grid(acf_plot_renewable,
           nrow = 1)
 ```
 
-> Answer: *PUT YOUR ANSWER HERE*
+> Answer: The differenced renewable energy ACF plots both still show evidence of seasonality. The lags at multiples of 12 have a higher ACF than the surrounding lags. However, the ACF in the differenced timeseries have lower magnitudes, and more lags that are not significant. 
 
 ### Q5
 Compute the Seasonal Mann-Kendall and ADF Test for the original "Total Renewable Energy Production" series. Ask R to print the results. Interpret the results for both test. What is the conclusion from the Seasonal Mann Kendall test? What's the conclusion for the ADF test? Do they match what you observed in Q3 plot? Recall that having a unit root means the series has a stochastic trend. And when a series has stochastic trend we need to use differencing to remove the trend.
@@ -211,7 +221,7 @@ smk_renewable <- SeasonalMannKendall(ts_renewable)
 summary(smk_renewable)
 ```
 
-> The SMK test tests for trends that occur overtime, taking into account the presence of seasonality. The test resulted in a relatively large s value (12468). This means that successive values in this timeseries had the tendency to get larger. The tau indicates the magnitude and sign of the relationship. A tau of 0.791 indicates a strong positive trend over time. The p-value for this test was =< 2.22e^-16^. Therefore, the results of this SMK test are significant. 
+> The SMK test tests for trends that occur overtime, taking into account the presence of seasonality. The test resulted in a relatively large s value (12468) relative to the denominator (15758.5). This means that successive values in this timeseries had the tendency to get larger. The tau indicates the magnitude and sign of the relationship. A tau of 0.791 indicates a strong positive trend over time. The p-value for this test was =< 2.22e^-16^. Therefore, the results of this SMK test are significant. 
 
 ```{r adf}
 #run the augmented Dickey-Fuller test
@@ -227,7 +237,7 @@ adf_renewable
 ### Q6
 Aggregate the original "Total Renewable Energy Production" series by year. You can use the same procedure we used in class. Store series in a matrix where rows represent months and columns represent years. And then take the columns mean using function colMeans(). Recall the goal is the remove the seasonal variation from the series to check for trend. Convert the accumulates yearly series into a time series object and plot the series using autoplot().
 
-```{r yearly_grouping }
+```{r yearly_grouping}
 #Group data by month (row) and year (column)
 renewable_matrix_yearly <- matrix(ts_renewable,
                                   byrow=FALSE,
@@ -240,28 +250,57 @@ renewable_matrix_yearly <- matrix(ts_renewable,
 #the last entry is sept 2024. So reset obs for oct - dec. to NA
 renewable_matrix_yearly[10:12, 52] <- NA
 
-#get the means of each year
+#set the years this ts occurs over
 my_year <- c(1973:2024)
 
+#get the means of each year and put into a dataframe
 renewable_matrix_yearly_mean <- colMeans(renewable_matrix_yearly, 
                                     na.rm = TRUE)
 renewable_matrix_yearly_mean <- data.frame("Year" = my_year, 
                                            "renewable_energy" = renewable_matrix_yearly_mean) 
 
+#create a timeseries for the yearly mean dataset
+ts_renewable_yearly <- ts(renewable_matrix_yearly_mean[,2],
+                          start = c(1973),
+                          frequency = 1)
 
-
-inflow_data_yearly <- data.frame(my_year,"inflow_data"=inflow_data_yearly)
-
-ggplot(inflow_data_yearly, aes(x=my_year,y=inflow_data))+
-  geom_line(color="blue")+
-  geom_smooth(color="red",method="lm")
+#plot the yearly timeseries
+autoplot(ts_renewable_yearly)+
+  labs(title = "Monthly Mean Renewable Energy Production by Year between\n1973 to 2024 in the United States",
+       y = paste("Energy Production",col_units[2,6], sep = " "),
+       x = "Year")
 ```
 
 ### Q7
 Apply the Mann Kendall, Spearman correlation rank test and ADF. Are the results from the test in agreement with the test results for the monthly series, i.e., results for Q6?
 
-```{r}
+```{r yearly_smk}
+#run the seasonal man kendall test
+mk_renewable_yearly <- MannKendall(ts_renewable_yearly)
 
+#read the smk output
+summary(mk_renewable_yearly)
 ```
 
-> Answer: 
+> Answer: The s value between the two series are not comparable due to a different denominator. The tau for the monthly mean renewable energy production by year timeseries ("yearly series") was 0.817. This is larger than the tau that was produced for the original renewable energy timeseries (0.791). This indicates that the yearly series also has a strong positive trend over time that is more prominent than the original series. However, the values are relatively similar, which indicates that the trend observed is similar. The p-value for this yearly timeseries Mann-Kendall test was =< 2.22e^-16^. Therefore, the results for this timeseries are also significant, and these tests are in agreement. 
+
+```{r yearly_spearman}
+#run the Spearman correlation rank test
+spearman_renewable_yearly <- cor.test(ts_renewable_yearly,my_year,method="spearman")
+
+#read the Spearman output
+spearman_renewable_yearly
+```
+
+> Answer: The Spearman correlation rank test was not conducted on the original series because it cannot handle seasonality. Since the yearly series has averaged the values across a year, seasonality will not be present in the yearly series. The Spearman rank correlation test is looking for monotonic relationships between two variables. The rho value is 0.9209425, which indicates a strong, positive monotonic trend. The p-value is < 2.2e^-16^. Therefore, the results for this timeseries are also significant. This test is in agreement with both of the Mann-Kendall tests, for the original and yearly timeseries.
+
+```{r yearly_adf}
+#get adf for yearly data
+adf_renewable_yearly <- adf.test(ts_renewable_yearly,
+                                 alternative = "stationary")
+
+#read the adf output
+adf_renewable_yearly
+```
+
+> Answer: Both the yearly series and original series had p-values larger than alpha (p-value > 0.05). The alternative hypothesis of the ADF is that the yearly renewable energy production timeseries is stationary. Therefore, we fail to reject the null hypothesis, and we conclude that the yearly time series has a unit root and is stochastic (i.e., nonstationary) over a stationary trend. This matches the ADF results for the original monthly series.

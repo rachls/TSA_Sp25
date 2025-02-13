@@ -208,7 +208,7 @@ plot_grid(acf_plot_renewable,
           nrow = 1)
 ```
 
-> Answer: The differenced renewable energy ACF plots both still show evidence of seasonality. The lags at multiples of 12 have a higher ACF than the surrounding lags. However, the ACF in the differenced timeseries have lower magnitudes, and more lags that are not significant. 
+> Answer: The differenced renewable energy ACF plot shows more evidence of this method being effective at eliminating the trend. The slow decay across increasing lags in the original plot indicates the presence of a strong trend. In the detrended data, the decay may be slightly faster but it is still slow, and all of the lags shown are significant. There is some presence of seasonality shown by oscillations in the decaying trend. The differenced ACF plot has a quicker decay, fewer significant lags, and smaller correlation magnitudes than the detrended plot. This indicates that it was more effective at removing the trend. There are still significant lags in the differenced plot. However, given the repetitive pattern of which lags are significant and the sign of the ACF, these significant lags may also be related to seasonality.
 
 ### Q5
 Compute the Seasonal Mann-Kendall and ADF Test for the original "Total Renewable Energy Production" series. Ask R to print the results. Interpret the results for both test. What is the conclusion from the Seasonal Mann Kendall test? What's the conclusion for the ADF test? Do they match what you observed in Q3 plot? Recall that having a unit root means the series has a stochastic trend. And when a series has stochastic trend we need to use differencing to remove the trend.

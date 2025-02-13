@@ -117,7 +117,7 @@ cat(mean_inflow,sd_inflow)
 mean_inflow <- mean(na.exclude(inflow_random))  #exclude NA or missing observation to compute mean and std
 sd_inflow <- sd(na.exclude(inflow_random))
 
-cat(mean_inflow,sd_inflow)
+cat(mean_inflow,"±", sd_inflow, sep = " ")
 
 autoplot(inflow_random)+
   autolayer(tsclean(inflow_random))

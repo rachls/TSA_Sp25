@@ -52,7 +52,9 @@ wind_data$DATE <- ym(wind_data$DATE)
 Many of the functions we will use require a time series object. You can transform your data in a time series using the function *ts()*. 
 
 ```{r}
-ts_wind_data <- ts(wind_data$AWND.1,frequency=12) 
+ts_wind_data <- ts(wind_data$AWND.1,
+                   frequency=12,
+                   start = c(1984,1)) 
 
 autoplot(ts_wind_data) +
   ylab("Average Wind Speed") 
@@ -61,7 +63,7 @@ autoplot(ts_wind_data) +
 
 ## Using pre-built function to clean series
 
-tsclean() from package 'forecast' identify and replace outliers and missing values in a time series using linear interpolation. This should be used with some caution!!
+tsclean() from package 'forecast' identify and replace **outliers** and missing values in a time series using linear interpolation. This should be used with some caution!!
 
 ```{r}
 
@@ -81,6 +83,14 @@ If you want to handle missing data, but do not want to remove outliers, here are
 `forecast::na.interp()`
 `zoo::na.approx()`
 
+```{r}
+clean_outliers_ts_wind <- forecast::na.interp(ts_wind_data)
+
+autoplot(clean_wind_data, series="Wind Clean") +
+  autolayer(clean_outliers_ts_wind, series = "Wind Clean with Outliers")+
+  #autolayer(ts_wind_data, series="Wind Raw", lwd = 0.5) +
+  ylab("Average Wind Speed") 
+```
 
 
 

@@ -76,7 +76,7 @@ autoplot(clean_wind_data, series="Wind Clean") +
 
 ```
 
-If you want to handle missing data, but do not want to remove outliers, here are two other opion that will replace them using linear interpolation.
+If you want to handle missing data, but do not want to remove outliers, here are two other options that will replace them using linear interpolation.
 
 `forecast::na.interp()`
 `zoo::na.approx()`

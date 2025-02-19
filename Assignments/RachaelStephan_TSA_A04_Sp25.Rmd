@@ -83,6 +83,7 @@ renewable_e_prod_consump$Month <- paste(month(renewable_e_prod_consump$Month,
 renewable_matrix <- renewable_e_prod_consump %>%
   select(`Month`, 
          `Total Renewable Energy Production`)
+  
 
 #get first few rows of each column to check structure and values
 kable(head(renewable_matrix),

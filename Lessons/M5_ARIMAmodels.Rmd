@@ -1,0 +1,287 @@
+---
+title: "M5: ARIMA Models in R"
+author: "Luana Lima"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Setting R code chunk options
+
+First R code chunk is used for setting the options for all R code chunks. The choice echo=TRUE means both code and output will appear on report, include = FALSE neither code nor output is printed.
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), tidy=FALSE) 
+```
+
+## Loading packages and initializing
+
+Second R code chunk is for loading packages. By setting message = FALSE, the code will appear but not the output. 
+
+```{r package, message=FALSE}
+library(lubridate)
+library(ggplot2)
+library(forecast)  
+library(Kendall)
+library(tseries)
+library(outliers)
+library(tidyverse)
+library(cowplot)
+
+```
+
+## Importing data
+
+For this module we will work with monthly average for electricity retail price in US. The data is from the U.S. Energy Information Administration and can be download [here][https://www.eia.gov/electricity/data/browser/#/topic/7?agg=2,0,1&geo=g&freq=M%2013:41:41%20GMT-0500%20(EST)]. 
+
+```{r}
+
+#Importing time series data from text file#
+electricity_price <- read.csv(file="./Data/Average_retail_price_of_electricity_United_States_monthly.csv",header=TRUE,skip=4)
+
+#Inspect data
+head(electricity_price)
+nvar <- ncol(electricity_price) - 1
+nobs <- nrow(electricity_price)
+
+head(electricity_price)
+summary(electricity_price)
+
+#No NAs so we don't need to worry about missing values
+
+#Initial plot
+#With plot function
+plot(electricity_price$residential.cents.per.kilowatthour, type ="l")
+
+#Note the time is reversed on this plot. Price should be increasing over time
+#Preparing the data - create date object and rename columns
+electricity_price_processed <-
+  electricity_price %>%
+  mutate( Month = my(Month) ) %>% 
+  rename( All.sectors = all.sectors.cents.per.kilowatthour ) %>% 
+  rename( Residential = residential.cents.per.kilowatthour ) %>% 
+  rename( Commercial = commercial.cents.per.kilowatthour ) %>% 
+  rename( Industrial = industrial.cents.per.kilowatthour ) 
+
+#Generating a box plot by factor where factor is month of the year
+TS_Plot <- 
+  ggplot(electricity_price_processed, aes(x=Month, y=Residential)) +
+      geom_line()
+plot(TS_Plot)
+
+#Note that although the date is reversed on the data frame, since we are using the ggplot and a date object, the plot looks right. 
+
+#but lets fix it!
+electricity_price_processed <-
+  electricity_price_processed %>% 
+  arrange(Month)
+
+```
+
+## Transforming data into time series object
+
+Many of the functions we will use require a time series object. You can transform your data in a time series using the function *ts()*. 
+
+```{r}
+ts_electricity_price <- ts(electricity_price_processed[,2:(nvar+1)],
+                           start=c(year(electricity_price_processed$Month[1]),
+                                   month(electricity_price_processed$Month[1])),
+                           frequency=12) 
+#note that we are only transforming columns with electricity price, not the date columns  
+head(ts_electricity_price,15)
+tail(ts_electricity_price,15)
+
+```
+## ACF and PACF plots
+
+```{r}
+
+#ACF and PACF plots
+
+plot_grid(
+  autoplot(Acf(electricity_price_processed$Residential, lag = 40, plot=FALSE), 
+                main = "ACF Residential Electricity Price"),
+  autoplot(Pacf(electricity_price_processed$Residential, lag = 40, plot=FALSE),  
+                  main = "PACF Residential Electricity Price")
+)
+
+```
+
+
+## Decomposing the time series and removing seasonality
+
+The plots from the previous section show the data has a seasonal component. Since we are working with non-seasonal ARIMA, we need to decompose the series and eliminate the seasonality.
+
+```{r}
+#Using R decompose function
+decompose_residential_price <- decompose(ts_electricity_price[,"Residential"],"additive")
+plot(decompose_residential_price)
+
+
+```
+
+To take seasonality only out of the data set, we will use function seasadj() from package forecast. The function returns seasonally adjusted data constructed by removing the seasonal component. It takes one main object that should be created using decompose() function.
+
+The ACF and PACF from the seasonal adjusted series will help you specify components **p** and **q** of the ARIMA(p,d,q).
+
+```{r}
+
+#Creating non-seasonal residential price time series
+deseasonal_residential_price <- 
+  
+
+#Plotting original and deseasoned series
+autoplot()
+
+
+
+#Comparing ACFs
+plot_grid(
+  autoplot(Acf(????, lag = 40, plot=FALSE), 
+                main = "Orginal Residential Electricity Price"),
+  autoplot(Acf(????, lag = 40, plot=FALSE),  
+                  main = "Deseason Residential Electricity Price")
+)
+
+#Note seasonality is gone!
+
+#Comparing PACFs
+plot_grid(
+  autoplot(Pacf(????, lag = 40, plot=FALSE), 
+                main = "Orginal Residential Electricity Price"),
+  autoplot(Pacf(????, lag = 40, plot=FALSE),  
+                  main = "Deseason Residential Electricity Price")
+)
+
+```
+
+The new ACF plot show a slow decay which is a sign of non-stationarity.
+
+## Run stationarity test
+
+Always check for stationarity before fitting ARIMA models. This will help specify component **d** of the ARIMA(p,d,q). If there is a trend you need to set **d=1**.
+
+```{r}
+
+#Run ADF
+
+
+#Lets difference the series to remove the trend.
+#Difference the data at lag 1 and remove NA
+deseasonal_residential_price_diff <- 
+
+#Check autocorrelation plot again
+
+
+#Comparing ACFs
+plot_grid(
+  autoplot(Acf(????, lag = 40, plot=FALSE), 
+                main = "Orginal Residential Electricity Price"),
+  autoplot(Acf(????, lag = 40, plot=FALSE),  
+                  main = "Deseason Residential Electricity Price"),
+  autoplot(Acf(????, lag = 40, plot=FALSE),  
+                  main = "Diff/Deseason Residential Electricity Price")
+)
+
+#Comparing PACFs
+plot_grid(
+  autoplot(Pacf(????, lag = 40, plot=FALSE), 
+                main = "Orginal Residential Electricity Price"),
+  autoplot(Pacf(????, lag = 40, plot=FALSE),  
+                  main = "Deseason Residential Electricity Price"),
+  autoplot(Oacf(????, lag = 40, plot=FALSE),  
+                  main = "Diff/Deseason Residential Electricity Price")
+)
+```
+
+
+## Manually fitting ARIMA models to series
+
+In the section we will manually fit ARIMA models to the residential electricity price series using function Arima() from package *forecast*. 
+Some important arguments for Arima() are:
+
+*y*: univariate (single vector) ts object 
+*order=c( , , )*: three orders (p,d,q) of non-seasonal part of the ARIMA in this order
+*include.mean*: the default is TRUE for undifferenced series, which means the model will include a mean term, and FALSE when d > 0
+*include.drift*: the default is FALSE, but changing to TRUE might lead to better fits. The drift will be necessary when the series mean is not zero even after differencing
+
+```{r}
+
+#Remember the order d=1 will perform the differencing, 
+#so lets try ARIMA(1,1,1) on the non-seasonal residential data before differencing
+Model_111 <- Arima()
+print(Model_111)
+compare_aic <- data.frame(Model_111$aic)
+
+#Check residuals series, if white noise we got a good fit
+plot_grid(
+  autoplot(Model_111$residuals),
+  autoplot(Acf(Model_111$residuals,lag.max=40, plot = FALSE),
+  Pacf(Model_111$residuals,lag.max=40),
+)
+
+#Now let's try ARIMA(0,1,1)
+
+
+
+compare_aic <- data.frame(compare_aic,Model_011$aic)
+
+
+#Now let's try ARIMA(2,1,1)
+
+
+
+
+#Now let's try ARIMA(1,1,2)
+
+
+#Now let's try ARIMA(2,1,2)
+
+#Let's check AIC
+print(compare_aic)
+```
+
+## Automatically fitting ARIMA
+
+Now that you have played with different order, let's try the auto.arima() function from the base package *stats*. The best fit for this time series is a ARIMA(2,1,2) with drift.
+
+```{r}
+
+
+
+```
+
+## What happens if you don't differenciate?
+
+If you don't differenciate the series, i.e., if you input the non-stationarity series, you should specify d = 1. Otherwise, Arima will be fitting a model to a non-stationary series. Note the difference between AIC for Model_101 and Model_101_diff
+
+```{r}
+#Remember the order d=1 will perform the differencing
+
+Model_101 <- Arima(deseasonal_residential_price,order=c(1,0,1))
+print(Model_101)
+compare_aic <- data.frame(compare_aic,Model_101$aic)
+
+
+
+Model_101_diff=Arima(deseasonal_residential_price_diff,order=c(1,0,1))
+print(Model_101_diff)
+
+compare_aic <- data.frame(compare_aic,Model_101_diff$aic)
+
+print(compare_aic)
+```
+Note that AIC is worse for the ARIMA(1,0,1) with the non-difference series.
+
+## Comparing models
+
+One way of checking goodness of fit is by plotting observed versus fitted value over time. Here we will do it for some of the models we created only. But it can be generalized for all of them.
+
+```{r}
+
+
+
+```
+This is still non-seasonal data. If you want to compare to original series, you need to add seasonal component back.
+
+

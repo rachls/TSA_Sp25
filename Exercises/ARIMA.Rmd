@@ -1,0 +1,67 @@
+# Situtating
+
+Filtering and preparation
+
+-   check for trends, seasonality, and stationariy
+-   outliers
+-   missing data
+
+Now we are working on estimating the data. This includes:
+
+-   Auto Correlation Function (ACF)
+-   Partial Auto Correlation Function (PACF)
+-   Model Parameter Estimation
+
+# Introduction
+
+Parametric models care about the distribution of the models. This includes ARMA and ARIMA models.
+
+-   AR (autoregressive): the independent variable regresses based on previous observations
+-   MA: future observations will depend on previous residuals/errors
+-   I: stands for integrated... the series is integrated (requires differencing to achieve stationarity)
+
+# Stationarity
+
+Is the trend stochastic or deterministic - Stochastic: differencing is required - Deterministic: use regression (differencing may also be used)
+
+Log transformations of the dataset can handle changes in variance with time.
+
+i.i.d. = Independent and identically distributed
+
+# ARMA Models
+
+The ARMA model is a combination of two simpler models: the Autoregressive (AR) model and the Moving Average (MA) model. The ARMA model is used to describe time series data that is stationary, meaning its statistical properties do not change over time.
+
+-   Autoregressive (AR) Model: This model uses the dependency between an observation and a number of lagged observations (previous time points). It is denoted as AR(p), where p is the number of lagged observations included.
+-   Moving Average (MA) Model: This model uses the dependency between an observation and a residual error from a moving average model applied to lagged observations. It is denoted as MA(q), where q is the number of lagged forecast errors included.
+
+The ARMA model combines these two approaches and is denoted as ARMA(p, q), where p is the order of the autoregressive part and q is the order of the moving average part.
+
+## AR Model
+
+The Autoregressive (AR) part of the ARMA model uses the relationship between an observation and a number of lagged (previous) observations to predict future values. Imagine, that you are attempting to forecast the temperature for tomorrow by using the data from the last several days. The AR portion makes the assumption that the current temperature and the temperatures from earlier days are connected. For instance suppose we write the temperature of today as T~t~ and the temperatures of the last two days as T~t-1~ and T~t-2~. An AR(2) model (since it uses two lagged values) can be written as:
+
+T~t~ = c + ϕ~1~T~t-1~ + ϕ~2~T~t-2~ + e~t~
+
+Where:
+
+-   c is a constant.
+-   ϕ~1~ and ϕ~2~ are coefficients that determine the influence of the past temperatures.
+-   e~t~ is the error term (random noise).
+
+## MA Model
+
+The Moving Average (MA) part of the ARMA model uses the dependency between an observation and a residual error from a moving average model applied to lagged observations. Continuing with our temperature example, the MA part assumes that today's temperature is also influenced by the errors made in predicting previous days' temperatures. If we denote today's error as e~t~ and the errors of the last two days as e~t-1~ and e~t-2~, an MA model can be written as:
+
+T~t~ = c + ϕ~1~e~t-1~ + ϕ~2~e~t-2~ + e~t~
+
+Where:
+
+-   c is a constant.
+-   ϕ~1~ and ϕ~2~ are coefficients that determine the influence of the past temperatures.
+
+## ARMA Models
+
+The ARMA model is a combination of both AR and MA components. An ARMA(p, q) model, where p is the number of lagged observations (AR part) and q is the number of lagged forecast errors (MA part), is represented as:
+
+**insert eq here**

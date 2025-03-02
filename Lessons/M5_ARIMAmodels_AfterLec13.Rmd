@@ -276,9 +276,18 @@ compare_aic <- data.frame(compare_aic,Model_211$aic)
 
 
 #Now let's try ARIMA(1,1,2)
-
+Model_112 <- Arima(deseasonal_residential_price,
+                   order=c(1,1,2),
+                   include.drift = TRUE)
+print(Model_112)
+compare_aic <- data.frame(compare_aic,Model_112$aic)
 
 #Now let's try ARIMA(2,1,2)
+Model_212 <- Arima(deseasonal_residential_price,
+                   order=c(2,1,2),
+                   include.drift = TRUE)
+print(Model_212)
+compare_aic <- data.frame(compare_aic,Model_212$aic)
 
 #Let's check AIC
 print(compare_aic)

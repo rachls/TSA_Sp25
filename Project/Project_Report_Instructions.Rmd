@@ -5,31 +5,7 @@ output: pdf_document
 geometry: margin=2.54cm
 ---
 
-## CREATE A REPOSITORY IN YOUR GITHUB ACCOUNT
-
-1. Go to your user account on GitHub an navigate to the repositories tab. 
-
-3. In the upper right corner, click the green "New" button. 
-
-4. Name your repository with recommended naming conventions (suggestion: *Lastname1Lastname2Lastname3_ENV797_TSA_FinalProject*). Write a short description of the purpose of the repository. Check the box to initialize the repository with a README. Add a .gitignore for R and add a GNU General Public License.
-
-5. Invite other group members as collaborators to the repository.
-
-## LINK YOUR REPO TO YOUR LOCAL DRIVE WITH RSTUDIO
- 
-1. Click the "Clone or download" button for your repository and then the "copy" icon. Make sure the box header lists "Clone with HTTPS" rather than "Clone with SSH." If not, click the "Use HTTPS" button and then copy the link.
-
-2. Launch RStudio and select "New Project" from the File menu. Choose "Version Control" and "Git."
-
-3. Paste the repository URL and give your repository a name and a file path.
-
-## CHOOSE A DATASET AND A RESEARCH QUESTION
-
-1. Choose a dataset of interest. 
-
-2. Describe what you want to do with the dataset and why. 
-
-## COMPLETE YOUR PROJECT REPORT
+## Instructions to Complete your Project Report
 
 ### General Guidelines
 

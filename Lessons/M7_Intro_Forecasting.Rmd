@@ -184,7 +184,11 @@ We will try these models on the original dataset and the deaseason electricity p
 # Model 5: Simple moving average on deseasonal data
 SMA_deseas <- sma(deseasonal_allsectors_price,
                   h = 36,
-                  )
+                  holdout = FALSE,
+                  silent = TRUE)
+
+plot(SMA_deseas)
+
 
 # Model 6: Simple moving average on original data
 

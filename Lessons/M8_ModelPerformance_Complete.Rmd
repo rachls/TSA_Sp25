@@ -220,7 +220,7 @@ kbl(seas_scores,
 
 ```
 
-## Visialization Challenge
+## Visualization Challenge
 
 Create a code that plots all forecasted values and observed values together.
 

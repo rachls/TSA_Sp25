@@ -256,6 +256,8 @@ autoplot(ts_act_power_daily_test)
 
 ### Model 1: STL + ETS
 
+Hybrid function that is decomposed with a STL approach. The seasonal components are removed and fit with ETS. Then forecast with ETS and add back seasonal data. 
+
 Forecasts of `stl` objects can be obtained using function `stlf()`.
 Forecast will be obtained by applying a non-seasonal exponential smoothing model to the seasonally adjusted data and re-seasonalizing using the last year of the seasonal component (for all seasonal components).
 
@@ -312,8 +314,8 @@ More info on fourier terms [here](https://otexts.com/fpp2/useful-predictors.html
 ARIMA_Four_fit <- auto.arima(ts_act_power_daily_train, 
                              seasonal=FALSE, 
                              lambda=0,
-                             xreg=fourier(ts_act_power_daily_train, 
-                                          K=c(2,12))
+                             xreg=fourier(ts_act_power_daily_train, #when you want to add terms that are not part of 
+                                          K=c(2,12))          #the timeseries or errors, such as supplementary factors
                              )
 
 #Forecast with ARIMA fit

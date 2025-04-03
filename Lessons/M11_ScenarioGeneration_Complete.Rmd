@@ -1,0 +1,237 @@
+---
+title: "M11: Scenario Generation"
+author: "Luana Lima"
+output: pdf_document
+always_allow_html: true
+editor_options: 
+  chunk_output_type: inline
+  markdown: 
+    wrap: sentence
+---
+
+
+## Setting R code chunk options
+
+First R code chunk is used for setting the options for all R code chunks.
+The choice echo=TRUE means both code and output will appear on report, include = FALSE neither code nor output is printed.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), tidy=FALSE) 
+```
+
+## Loading packages and initializing
+
+Second R code chunk is for loading packages.
+By setting message = FALSE and warning = FALSE, the code will appear but it will node include messages and warnings.
+
+```{r package, message=FALSE, warning=FALSE}
+library(lubridate)
+library(ggplot2)
+library(forecast)  
+library(Kendall)
+library(tseries)
+library(outliers)
+library(tidyverse)
+library(smooth)
+library(zoo)
+library(kableExtra)
+```
+
+## Cholesky decomposition in R
+
+Suppose we have 3 variables that follow a $N(0,1)$ distribution and are highly correlated. We want to make sure that when we generate scenarios, i.e. draws from the normal distribution, for all three variable we take their correlation into account. In other words if they are highly positively correlated, higher values for one leads to higher values for the other two. 
+
+```{r}
+
+nvar=3
+nscen=1000
+
+#Generate 1000 normal random variates for each variable 
+X=array(0,c(nvar,nscen))
+for(i in 1:nvar){
+  X[i,]=rnorm(nscen,mean=0,sd=1)   
+}
+
+# Alternatively, if you are not a big fun of loops you could do this three times.
+#X[1,]=rnorm(nscen,mean=0,sd=1)  
+#X[2,]=rnorm(nscen,mean=0,sd=1)  
+#X[3,]=rnorm(nscen,mean=0,sd=1)  
+```
+
+The 1000 normal variate were independently generated, so if we calculate the correlation we will not find a significant correlation among the three variables.
+
+```{r}
+#Calculating correlation matrix R
+Xcor=cor(t(X))  
+
+# Note: the t(X) will return the transpose of matrix X. 
+# We need to transpose so that cor() function finds the correlations
+# among the three variable and not among the 1000 scenarios
+
+print(Xcor)
+```
+
+Now suppose that from historical data we calculated the correlation among the three variables, let's store that correlation on a correlation matrix R.
+
+```{r}
+
+# Here I am just defining a fictional correlation matrix
+# But usually you will get correlation matrix from historial data.
+
+# creating an identity matrix (1 in the principal diagonal, 0 o.w.)
+# and order nvar x nvar
+R=diag(nvar)  
+R[1,2]=0.80   #define correlation between variables 1 and 2
+R[2,1]=0.80
+R[1,3]=0.90
+R[3,1]=0.90
+R[2,3]=0.85
+R[3,2]=0.85
+print(R)
+```
+We want our draws to account for that correlation, o.w., we may be generating scenarios that are not realistic. We will pass this correlation matrix R through our generated scenarios X using Cholesky decomposition.
+
+
+```{r}
+# Get Cholesky decomposition, chol() will give upper triangular matrix
+U=chol(R)
+print(U)
+
+# Transpose U to get lower triangular matrix just 
+L=t(U) 
+print(L)
+```
+
+This lower triangular matrix (3x3) will be multiplied by our scenarios matrix X (3x1000) and will lead to new 1000 scenarios.
+
+```{r}
+#Passing the correlation matrix R to the the scenarios in matrix X
+
+Y=L%*%X   # the symbol %*% is for matrix multiplication 
+
+# Checking if the correlation of generated scenarios matches matrix R
+Ycor=cor(t(Y))  
+print(Ycor) #compare Ycor with R and you will see it worked.
+
+```
+
+
+## Generating scenarios with ARIMA model
+
+Now let's consider a real world applications of scenario generation based on the ARIMA model. We will work with our inflow time series.
+
+```{r}
+#Importing data set with inflow for 15 hydro power plants (HPP)
+data=read.table("./Data/inflowtimeseries.txt",header=FALSE,skip=0)
+
+nhydro=3   #choosing to work with only the first three HPP
+nobs=nrow(data)-12
+
+#transforming into normal distribution as we create the ts object
+inflow_data=ts(log(data[1:nobs,3:(nhydro+2)]),start=c(1931,1),frequency=12)
+```
+
+Now that we have our time series object with three columns. Let's check for correlation among our variables.
+
+```{r}
+#Calculating correlation matrix R and Cholesky decomposition R
+R = cor(inflow_data)
+print(R)
+```
+Note that our three variable are highly correlated so we will need to consider this correlation when drawing scenarios. Let's fit an ARIMA model to our three variables independently.
+
+```{r}
+#fit the seasonal ARIMA to the each basin
+horizon=60  #we want to forecast two years ahead in monthly steps
+nscen=10    #number of scenarios to be generated 
+
+X=array(0,c(nhydro,horizon,nscen)) #array where we will store the independently generated scenarios 
+
+# Need to do a loop over all variables under analysis or repeat process 3 times
+for(i in 1:nhydro){  
+  
+  # Fit a SARIMA model
+  # Note I am fixing a few parameters regarding the order of the model 
+  # just to help auto.arima() converge faster
+  
+  fit_SARIMA=auto.arima(inflow_data[,i],max.d=1,max.D=1,max.p=1,max.P=1,max.Q=1) 
+  
+  for_SARIMA=forecast(fit_SARIMA, h=horizon)   #forecast using the fitted SARIMA
+  
+  #Generating scenarios
+  # to generate scenarios we will need standard deviation of residuals
+  # forecast() function does not directly output the standard error we will need to calculate it
+
+  for(t in 1:horizon){
+    # we will use the following expression to manually compute sd
+    sd=(for_SARIMA$upper[t,1] - for_SARIMA$lower[t,1]) / (2 * qnorm(.5 + for_SARIMA$level[1] / 200))
+    
+    # Now that I have mean and standard deviation for time t
+    # I can draw scenarios using the rnorm() function
+    X[i,t,]=rnorm(nscen,mean=for_SARIMA$mean[t],sd=sd)  
+    
+    #note this is done in a loop for all the 24 steps we are forecasting 
+    #and this loop is inside a loop over all HPP inflows
+    
+  } # end t loop
+
+  # remove models just to make sure we start from scratch for the next HPP
+  # remember we are still inside the HPP loop
+  rm(fit_SARIMA, for_SARIMA) 
+                            
+}#end HPP loop
+```
+
+Now our array/matrix X has all the draws/scenarios but notice they don't have the same correlation we observed in the historical data.
+```{r}
+#Calculating correlation for s=1
+aux <- X[,,1]
+cor(t(aux))
+```
+
+Let's fix that with Cholesky.
+
+```{r}
+U <- chol(R) #that will give upper triangular matrix for Cholesky decomposition
+L <- t(U) #to get lower triangular matrix you need to transpose U, that is what the t() function is doing here
+
+#Creating array Y where we will store correlated scenarios
+Y <- array(0,c(nhydro,horizon,nscen)) 
+
+# Need to use another loop structure to make sure spatial correlation among HPP is present in all scenarios
+for(s in 1:nscen){ 
+  aux <- X[,,s] #creating aux variable simple because X is not a 2x2 matrix, 
+                  #but an array of 3 dimension and we cannot do matrix multiplication with arrays
+  
+  Y[,,s] <- L%*%aux  #recall L is the Cholesky decomposition of our correlation matrix R computed from with historical data
+
+}#end scenario loop
+
+
+#Calculate correlation again
+aux <- Y[,,5]
+cor(t(aux))
+```
+
+Note that the correlation is closer to the sample correlation matrix R.
+Just to illustrate what we have done let's plot the scenarios we generated for the first HPP.
+
+```{r}
+iHP <- 1
+
+#exponentiate back
+for(s in 1:nscen){
+  Y[,,s] <- (Y[,,s])
+}
+
+#getting min and max values of Y to make sure all scenarios will be within the plot limits 
+ymax <- max(Y[iHP,,])
+ymin <- min(Y[iHP,,])
+plot(Y[iHP,,1],col="gray",type="l",ylim=c(ymin,ymax),xaxt='n',xlab="") #plotting first scenario
+axis(1,at=c(1,13),labels=c("2011","2012"))
+for(s in 2:nscen){
+  lines(Y[iHP,,s],col="gray")   #adding lines to the plot corresponding to all scenarios
+} 
+
+```
+
